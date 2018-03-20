@@ -1,0 +1,22 @@
+{
+  "name": "ffantasy",
+  "version": "0.1.0",
+  "description": "",
+  "main": "src/app.js",
+  "scripts": {
+    "serve": "http-server ./src -p 8080"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ushiboy/ffantasy.git"
+  },
+  "author": "ushiboy",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/ushiboy/ffantasy/issues"
+  },
+  "homepage": "https://github.com/ushiboy/ffantasy#readme",
+  "devDependencies": {
+    "http-server": "^0.11.1"
+  }
+}
