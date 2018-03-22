@@ -9,3 +9,4 @@ jQueryベタ書きの[アプリケーション](https://ushiboy.github.io/ffanta
 ## 作業記録
 
 * [Step1 手元で確認できるようにする](./work_logs/step1.md)
+* [Step2 既存のアプリケーションを壊す不安を抑えるために、自動でテストをできるようにする](./work_logs/step2.md)

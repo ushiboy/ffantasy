@@ -1,3 +1,5 @@
+test/e2e/driver/*
+!test/e2e/driver/.keep
 ### https://raw.github.com/github/gitignore/5ec6269c94d3b0c9ff5a7f87c890d067138bc58f/Node.gitignore
 
 # Logs
