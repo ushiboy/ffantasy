@@ -261,3 +261,119 @@ $ npm run -s mocha test/e2e/spec/FishList-test.js
       at process._tickCallback (internal/process/next_tick.js:160:7)
 ```
 
+### E2Eテストを書く
+
+seleniumでE2Eを書くときに、そのままベタ書きすると後でメンテが辛いコードになる。
+
+例えば「一覧の読み込みを待って列の値を確認する」テスト場合、次の様になる。
+
+```javascript
+  it('一覧が動的に読み込まれること', async () => {
+    await driver.get('http://localhost:8080');
+    let rows;
+    await driver.wait(async () => {
+      rows = await driver.findElement(By.id('fishes-list')).findElements(By.tagName('tr'));
+      return rows.length !== 0;
+    }, 5000);
+
+    assert(rows.length === 3);
+
+    const cols1 = await rows[0].findElements(By.tagName('td'));
+    assert(await cols1[1].getText() === 'まぐろ');
+    const cols2 = await rows[1].findElements(By.tagName('td'));
+    assert(await cols2[1].getText() === 'はまち');
+    const cols3 = await rows[2].findElements(By.tagName('td'));
+    assert(await cols3[1].getText() === 'かつお');
+  });
+```
+
+
+WebDriverのAPIでDOM触って、要素から取り出した値をアサーションにかけるみたいなのの繰り返しになる。
+
+書いたばかりはいいけど、後から見返した時に何していたのかだいたい忘れる。
+
+そこで、[Page Object](https://github.com/SeleniumHQ/selenium/wiki/PageObjects)を利用する。
+
+具体的には次のようなPage Objectを用意する。
+
+```javascript
+class FishesList {
+
+  constructor(driver) {
+    this.driver = driver;
+  }
+
+  async open() {
+    await this.driver.get('http://localhost:8080');
+    return this;
+  }
+
+  async waitForRowToFinishLoading() {
+    await this.driver.wait(async () => {
+      const rows = await this._getRows();
+      return rows.length !== 0;
+    }, 5000);
+    return this;
+  }
+
+  async getRowLength() {
+    const rows = await this._getRows();
+    return rows.length;
+  }
+
+  async getNameOfIndex(index) {
+    const rows = await this._getRows();
+    const cols = await rows[index].findElements(By.tagName('td'));
+    return cols[1].getText();
+  }
+
+  async _getRows() {
+    return this.driver.findElement(By.id('fishes-list')).findElements(By.tagName('tr'));
+  }
+
+}
+```
+
+Page Objectを使ってテストを書く。
+
+```javascript
+  it('一覧が動的に読み込まれること', async () => {
+    const p = new FishesList(driver);
+    await p.open();
+    await p.waitForRowToFinishLoading();
+
+    assert(await p.getRowLength() === 3);
+
+    assert(await p.getNameOfIndex(0) === 'まぐろ')
+    assert(await p.getNameOfIndex(1) === 'はまち')
+    assert(await p.getNameOfIndex(2) === 'かつお')
+  });
+```
+
+Page Objectを使うとDOMに触ったり操作する辺りは隠蔽できるので、苦しみが若干和らぐ。
+
+E2Eテスト全体のコードは[こちら](../test/e2e/spec/FishList-test.js)
+
+
+実行して動作確認する。
+
+```
+$ npm run -s mocha test/e2e/spec/FishList-test.js
+
+
+  FishList
+    ✓ 一覧が動的に読み込まれること (580ms)
+    ✓ 未選択状態で"けってい"するとアラートがでること (603ms)
+    ✓ 一覧のアイテムを1件選択して"けってい"すると選択結果が表示されること (639ms)
+    ✓ 一覧のアイテムを複数件選択して"けってい"すると選択結果が表示されること (681ms)
+    ✓ 全体チェックをするとすべてのアイテムが選択されること (770ms)
+    ✓ 全部チェックを外すとすべてのアイテムが選択解除になること (934ms)
+
+
+  6 passing (4s)
+```
+
+
+## まとめ
+
+自動でテストできるようにした。
