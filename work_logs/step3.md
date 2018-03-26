@@ -287,4 +287,4 @@ $ npm run -s mocha test/e2e/spec/FishList-test.js
 
 開発用ビルド環境とproduction用ビルド環境を用意した。
 
-jQueryの依存管理をNPMで扱うようにした。
+jQueryの依存管理をnpmで扱うようにした。
