@@ -4,7 +4,7 @@
 
 ## 作業内容
 
-### 依存管理含めた開発環境を整備する
+### 開発環境を整備する
 
 #### webpackを導入する
 
@@ -73,7 +73,7 @@ $ vi package.json
 
 #### ESLintを導入する
 
-グローバル変数などの正しく管理するためにeslintを入れる。
+グローバル変数など意図せずに入ってしまうことを避けるためにeslintを入れる。
 
 ```
 $ npm install -D eslint
@@ -118,7 +118,9 @@ $ vi .eslintrc.json
 }
 ```
 
-#### jQueryへの依存周りを修正する
+現状のままのコードだとjQueryがグローバル扱いになっているために警告される。
+
+#### jQueryの依存管理をnpmに変更する
 
 jQueryはバージョン指定でnpmを介してインストールする。
 
@@ -126,23 +128,25 @@ jQueryはバージョン指定でnpmを介してインストールする。
 $ npm install jquery@3.2.1
 ```
 
-アプリケーションコードではjqueryをインポートして使うようにする。
+srcディレクトリに配置してあったjquery.min.jsファイルは削除する。
+
+アプリケーションコードではjQueryをインポートして使う。
 
 ```
 $ vi src/app.js
 ```
 
 ```javascript
-import $ from 'jquery';
+import $ from 'jquery';   // <- 追加
 
 $(function() {
     ...
 });
 ```
 
-HTMLファイルでjqueryを直接scriptタグで参照するのをやめる。
+HTMLファイルでjQueryを直接scriptタグで参照するのをやめる。
 
-また、app.jsではなくビルドしたbundle.jsを読み込むようにする。
+また、ビルドしたbundle.jsを読み込むようにする。
 
 ```
 $ vi src/index.html
@@ -172,15 +176,17 @@ E2Eテストを動かして、壊れていないことを確認する。
 $ npm run -s mocha test/e2e/spec/FishList-test.js
 ```
 
-### production用ビルドを行えるようにする
+### production用ビルド環境を整備する
 
-JavaScriptとは別に管理するリソースをビルド時に扱えるようにする。
+JavaScriptとは別に管理するHTMLやJSONファイルなどのリソースを扱えるようにする。
+
+とりあえずcopy-webpack-pluginでビルド時にbuildディレクトリへコピーする。
 
 ```
 $ npm install -D copy-webpack-plugin
 ```
 
-production用のwebpackビルド設定を行う。
+production用のwebpackビルド設定を追加する。
 
 ```
 $ vi webpack.config.js
@@ -241,7 +247,7 @@ function configureWebpack(mode) {
 module.exports = configureWebpack(process.env.ENV);
 ```
 
-production用ビルドのbuildタスクと、毎回一から作り直すためのcleanタスクを追加する。
+production用ビルドのbuildタスクと、cleanタスクを追加する。
 
 確認用WEBサーバのドキュメントルートのパスをbuildディレクトリにしておく。
 
@@ -280,3 +286,5 @@ $ npm run -s mocha test/e2e/spec/FishList-test.js
 ## まとめ
 
 開発用ビルド環境とproduction用ビルド環境を用意した。
+
+jQueryの依存管理をNPMで扱うようにした。
