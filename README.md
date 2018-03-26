@@ -10,3 +10,4 @@ jQueryベタ書きの[アプリケーション](https://ushiboy.github.io/ffanta
 
 * [Step1 手元で確認できるようにする](./work_logs/step1.md)
 * [Step2 既存のアプリケーションを壊す不安を抑えるために、自動でテストをできるようにする](./work_logs/step2.md)
+* [Step3 ライブラリの依存関係管理とビルド環境を導入する](./work_logs/step3.md)
