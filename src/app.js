@@ -6,6 +6,12 @@ import * as fish from './fish.js';
 var fishes = [];
 var selectedItems = [];
 
+const webApi = {
+  get(url) {
+    return fetch(url);
+  }
+};
+
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 store.subscribe(() => {
   fishes = store.getState().fishes;
@@ -21,7 +27,7 @@ store.subscribe(() => {
   });
 });
 
-store.dispatch(fish.fetchFishes());
+store.dispatch(fish.fetchFishes(webApi));
 
 $('#all-check').change(function() {
   var forceStatus = $(this).prop('checked');

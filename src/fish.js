@@ -11,8 +11,8 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   }
 }
 
-export async function fetchFishes() {
-  const res = await fetch('fishes.json');
+export async function fetchFishes(webApi) {
+  const res = await webApi.get('fishes.json');
   const json = await res.json();
   const { fishes } = json;
   return {
