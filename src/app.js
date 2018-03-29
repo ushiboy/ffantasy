@@ -15,16 +15,25 @@ const webApi = {
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 store.subscribe(() => {
   fishes = store.getState().fishes;
+  selectedItems = store.getState().selectedItems;
+
+  const selectedIds = selectedItems.reduce((set, f) => {
+    set.add(f.id);
+    return set;
+  }, new Set());
 
   const $fishesList = $('#fishes-list');
-
+  $fishesList.empty();
   $.each(fishes, function(i, r) {
+    const $check = $('<input type="checkbox" class="select-row" />').data(r);
+    $check.prop('checked', selectedIds.has(r.id));
     $fishesList.append(
       $('<tr />')
-        .append($('<td />').append($('<input type="checkbox" class="select-row" />').data(r)))
+        .append($('<td />').append($check))
         .append($('<td />').text(r.name))
     );
   });
+  $('#all-check').prop('checked', selectedItems.length === fishes.length);
 });
 
 store.dispatch(fish.fetchFishes(webApi));
@@ -38,34 +47,13 @@ $('#all-check').change(function() {
 });
 
 $('#fishes-list').on('change', '.select-row', function() {
-  var $check = $(this);
-  var rowData = $check.data();
+  const $check = $(this);
+  const rowData = $check.data();
   if (!$check.prop('checked')) {
-    var temp = [];
-    $.each(selectedItems, function(i, r) {
-      if (rowData.id !== r.id) {
-        temp.push(r);
-      }
-    });
-    selectedItems = temp;
+    store.dispatch(fish.deselectFish(rowData));
   } else {
-    var exist = false;
-    $.each(selectedItems, function(i, r) {
-      if (rowData.id === r.id) {
-        exist = true;
-        return false;
-      }
-    });
-
-    if (!exist) {
-      selectedItems.push(rowData);
-    }
-    selectedItems.sort(function(a, b) {
-      return a.id - b.id;
-    });
+    store.dispatch(fish.selectFish(rowData));
   }
-
-  $('#all-check').prop('checked', selectedItems.length === fishes.length);
 });
 
 $('#select-button').click(function() {
