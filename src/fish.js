@@ -1,6 +1,8 @@
 export const FETCH = 'fishes/fetch';
 export const SELECT = 'fishes/select';
 export const DESELECT = 'fishes/deselect';
+export const SELECT_ALL = 'fishes/select/all';
+export const DESELECT_ALL = 'fishes/deselect/all';
 
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   const { selectedItems } = state;
@@ -32,6 +34,14 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
       })
     });
   }
+  case SELECT_ALL:
+    return Object.assign({}, state, {
+      selectedItems: state.fishes.concat()
+    });
+  case DESELECT_ALL:
+    return Object.assign({}, state, {
+      selectedItems: []
+    });
   default:
     return state;
   }
@@ -64,5 +74,17 @@ export function deselectFish(fish) {
     payload: {
       fish
     }
+  };
+}
+
+export function selectAll() {
+  return {
+    type: SELECT_ALL
+  };
+}
+
+export function deselectAll() {
+  return {
+    type: DESELECT_ALL
   };
 }

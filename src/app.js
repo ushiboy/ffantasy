@@ -39,11 +39,12 @@ store.subscribe(() => {
 store.dispatch(fish.fetchFishes(webApi));
 
 $('#all-check').change(function() {
-  var forceStatus = $(this).prop('checked');
-  $('.select-row').each(function(i, r) {
-    $(r).prop('checked', forceStatus);
-    $(r).change();
-  });
+  const forceStatus = $(this).prop('checked');
+  if (forceStatus) {
+    store.dispatch(fish.selectAll());
+  } else {
+    store.dispatch(fish.deselectAll());
+  }
 });
 
 $('#fishes-list').on('change', '.select-row', function() {
