@@ -3,9 +3,6 @@ import { createStore, applyMiddleware } from 'redux';
 import promiseMiddleware from 'redux-promise';
 import * as fish from './fish.js';
 
-var fishes = [];
-var selectedItems = [];
-
 const webApi = {
   get(url) {
     return fetch(url);
@@ -14,9 +11,7 @@ const webApi = {
 
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 store.subscribe(() => {
-  fishes = store.getState().fishes;
-  selectedItems = store.getState().selectedItems;
-
+  const { fishes, selectedItems }  = store.getState();
   const selectedIds = selectedItems.reduce((set, f) => {
     set.add(f.id);
     return set;
@@ -58,11 +53,9 @@ $('#fishes-list').on('change', '.select-row', function() {
 });
 
 $('#select-button').click(function() {
+  const { selectedItems } = store.getState();
   if (selectedItems.length > 0) {
-    var names = [];
-    $.each(selectedItems, function(i, r) {
-      names.push(r.name);
-    });
+    const names = selectedItems.map(r => r.name);
     alert(names.join(','));
   } else {
     alert('せんたくしてください');
