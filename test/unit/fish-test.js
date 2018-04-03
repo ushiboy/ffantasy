@@ -23,24 +23,35 @@ function generateDummyWebApi(responseJson) {
 
 describe('Fish', function() {
 
-  describe('action', () => {
+  describe('Action', () => {
 
-    describe('fetchFishes', () => {
+    describe('#fetchFishes', () => {
+      const response = {
+        fishes: [
+          {
+            'id': 1,
+            'name': 'まぐろ'
+          }
+        ]
+      };
+      let type, payload, webApi;
 
-      it('fishes.jsonから取得した一覧データをpayloadとして返す', async () => {
-        const response = {
-          fishes: [
-            {
-              'id': 1,
-              'name': 'まぐろ'
-            }
-          ]
-        };
-        const webApi = generateDummyWebApi(response);
-        const { type, payload } = await fish.fetchFishes(webApi);
+      beforeEach(async () => {
+        webApi = generateDummyWebApi(response);
+        const r = await fish.fetchFishes(webApi);
+        type = r.type;
+        payload = r.payload;
+      });
+
+      it('fishes.jsonを取得する', async () => {
         assert(webApi.requestedUrls[0] === 'fishes.json');
-        assert(type === fish.FETCH);
+      });
 
+      it('FETCHをtypeとして返す', async () => {
+        assert(type === fish.FETCH);
+      });
+
+      it('一覧データをpayloadとして返す', async () => {
         const { fishes } = payload;
         assert(fishes.length === 1);
         assertFishEqual(fishes[0], 1, 'まぐろ');
@@ -50,12 +61,22 @@ describe('Fish', function() {
 
     describe('#selectFish', () => {
 
-      it('選択された行データをpayloadとして返す', () => {
-        const { type, payload } = fish.selectFish({
+      let type, payload;
+
+      beforeEach(() => {
+        const r = fish.selectFish({
           'id': 1,
           'name': 'まぐろ'
         });
+        type = r.type;
+        payload = r.payload;
+      });
+
+      it('SELECTをtypeとして返す', () => {
         assert(type === fish.SELECT);
+      });
+
+      it('選択された行データをpayloadとして返す', () => {
         assertFishEqual(payload.fish, 1, 'まぐろ');
       });
 
@@ -63,12 +84,22 @@ describe('Fish', function() {
 
     describe('#deselectFish', () => {
 
-      it('選択解除された行データをpayloadとして返す', () => {
-        const { type, payload } = fish.deselectFish({
+      let type, payload;
+
+      beforeEach(() => {
+        const r = fish.deselectFish({
           'id': 1,
           'name': 'まぐろ'
         });
+        type = r.type;
+        payload = r.payload;
+      });
+
+      it('DESELECTをtypeとして返す', () => {
         assert(type === fish.DESELECT);
+      });
+
+      it('選択解除された行データをpayloadとして返す', () => {
         assertFishEqual(payload.fish, 1, 'まぐろ');
       });
 
@@ -76,7 +107,7 @@ describe('Fish', function() {
 
     describe('#selectAll', () => {
 
-      it('SELECT_ALLタイプを返す', () => {
+      it('SELECT_ALLをtypeとして返す', () => {
         const { type } = fish.selectAll();
         assert(type === fish.SELECT_ALL);
       });
@@ -85,7 +116,7 @@ describe('Fish', function() {
 
     describe('#deselectAll', () => {
 
-      it('DESELECT_ALLタイプを返す', () => {
+      it('DESELECT_ALLをtypeとして返す', () => {
         const { type } = fish.deselectAll();
         assert(type === fish.DESELECT_ALL);
       });
@@ -94,7 +125,7 @@ describe('Fish', function() {
 
   });
 
-  describe('reducer', () => {
+  describe('Reducer', () => {
 
     describe('FETCH アクション', () => {
 
