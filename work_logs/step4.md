@@ -11,7 +11,7 @@ eslintの設定でmochaを有効にする。parserOptionsにecmaVersionを追加
 $ vi .eslintrc.json
 ```
 
-```json
+```json:.eslintrc.json
   ...
   "env": {
     ...
@@ -42,7 +42,7 @@ $ vi src/fish.js
 
 最初にReducer。
 
-```javascript
+```javascript:src/fish.js
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   switch (action.type) {
   default:
@@ -307,3 +307,4 @@ function generateDummyWebApi(responseJson) {
   });
 ...
 ```
+
