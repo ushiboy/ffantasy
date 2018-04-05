@@ -2,12 +2,12 @@
 
 ドメインとプレゼンテーションを分離して、ドメインの単体テストを追加する。
 
-
 ## 作業内容
 
-eslintの設定でmochaを有効にする。
+### ESLintの設定とReduxの導入
 
-parserOptionsにecmaVersionを追加してECMAScript201x系で書けるようにする。
+ESLintの設定でmochaを有効にする。
+また、parserOptionsにecmaVersionを追加してECMAScript201x系で書けるようにする。
 
 ```json
   ...
@@ -23,21 +23,18 @@ parserOptionsにecmaVersionを追加してECMAScript201x系で書けるように
   ...
 ```
 
-とりあえず状態管理をReduxで扱うことにする。
-
-reduxとミドルウェアのredux-promiseを入れる。
+状態管理をReduxで扱うためにreduxとミドルウェアのredux-promiseを入れる。
 
 
 ```
 $ npm install redux redux-promise
 ```
 
+### Reducerの作成とアプリケーションへの適用
+
 既存コードから必要な状態を抽出する。
-
 今回は一覧(fishes)と選択アイテム(selectedItems)の2つ。これをReducerで扱うstateとする。
-
 ReducerやAction、Action Typeは`src/fish.js`として別ファイルで扱う。
-
 
 最初にReducerの大枠を作る。
 
@@ -52,22 +49,22 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 
 アプリケーション本体(`src/app.js`)でReduxのStoreとして読み込む。
 
-webpackでバンドルしているため、変数はグローバル変数にならないし、
+webpackでバンドルしているので変数はグローバル変数にならないし、
 jQueryのready内で扱う必要がなくなっているので`$(function() { ... })`をやめる。
 
-fishes Reducerを使ってStoreを作成する。
-ミドルウェアとしてredux-promiseを読ませておく。
+fishes Reducerを使ってStoreを作成する。ミドルウェアとしてredux-promiseを読ませておく。
 
 ```javascript
 import $ from 'jquery';
-import { createStore, applyMiddleware } from 'redux';
-import promiseMiddleware from 'redux-promise';
-import * as fish from './fish.js';
+import { createStore, applyMiddleware } from 'redux'; // <- 追加
+import promiseMiddleware from 'redux-promise'; // <- 追加
+import * as fish from './fish.js'; // <- 追加
 
 // fishesとselectedItemsはまだ残しておく
 var fishes = [];
 var selectedItems = [];
 
+// 以下追加
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 store.subscribe(() => {
   console.log('change');
@@ -76,13 +73,19 @@ store.subscribe(() => {
 ...
 ```
 
-既存コードからアクションを抜き出していく。まずは一覧データの取得アクション。
+ここまででReduxを使う準備は完了。以降は既存コードからアクションを抜き出していく。
 
-fishes.jsonのAjax取得部分をfetchFishesとする。
+### 一覧データの取得アクション
+
+まずは一覧データの取得をアクション化(FETCHとして定義)する。
 
 ```javascript
 export const FETCH = 'fishes/fetch';
-...
+```
+
+fishes.jsonのAjax取得部分をfetchFishesとして、FETCHタイプでpayloadに取得した一覧データを返すようにする。
+
+```javascript
 export async function fetchFishes() {
   const res = await fetch('fishes.json');
   const json = await res.json();
@@ -96,7 +99,7 @@ export async function fetchFishes() {
 }
 ```
 
-追加したFETCHアクションをハンドリングするためにReducerに追記する。
+FETCHアクションのハンドリングをReducerに追記する。
 
 ```javascript
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
@@ -111,7 +114,7 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 }
 ```
 
-fetchFishesはアプリケーション起動時に、Storeへdispatchする。
+これをアプリケーション本体で使う。アプリケーション起動時にStoreへdispatchする。
 
 ```javascript
 ...
@@ -125,13 +128,10 @@ store.dispatch(fish.fetchFishes()); // <- 追加
 ...
 ```
 
-Storeのsubscribeで一覧データが取り出せるようになったので、一覧の初期化処理を書き換える。
-
-
-次の部分を廃止。
+Storeのsubscribeで一覧データが取り出せるようになったので、一覧の描画処理を書き換える。
+アプリケーション本体から次の部分を廃止する。
 
 ```javascript
-...
 $.ajax('fishes.json').done(function(response) {
   fishes = response.fishes;
   var $fishesList = $('#fishes-list');
@@ -144,13 +144,11 @@ $.ajax('fishes.json').done(function(response) {
     );
   });
 });
-...
 ```
 
-こちらで置き換え。
+`$.ajax`のコールバックでやっていたことをStoreのsubscribeに移動する。
 
 ```javascript
-...
 store.subscribe(() => {
   fishes = store.getState().fishes;
   const $fishesList = $('#fishes-list');
@@ -163,27 +161,21 @@ store.subscribe(() => {
     );
   });
 });
-...
 ```
 
-これで一覧の初期教示までは仮おき。ここまでの単体テストを作る。
+これで一覧の描画処理は仮おきしておく。
+
+### FETCHに関しての単体テストを作る
+
+単体テスト用のディレクトリを切って作る。
 
 ```
 $ vi test/unit/fish-test.js
 ```
 
-まずはReducerのテストとして、FETCHアクションのテストを追加する。
-
-一覧データのアサーションは何度も使うので、assertFishEqualとしてまとめておく。
-
 ```javascript
 const assert = require('power-assert');
 import * as fish from '../../src/fish.js';
-
-function assertFishEqual(actual, id, name) {
-  assert(actual.id === id);
-  assert(actual.name === name);
-}
 
 describe('Fish', function() {
 
@@ -191,6 +183,27 @@ describe('Fish', function() {
     // アクションのテストはここに書く
   });
 
+  describe('Reducer', () => {
+    // リデューサーのテストはここに書く
+  });
+
+});
+```
+
+一覧データのアサーションは何度も使うので、assertFishEqualとしてまとめておく。
+
+```javascript
+function assertFishEqual(actual, id, name) {
+  assert(actual.id === id);
+  assert(actual.name === name);
+}
+```
+
+#### ReducerのFETCHのテスト
+
+まずはReducerのテストとして、FETCHアクションのテストを追加する。
+
+```javascript
   describe('Reducer', () => {
 
     describe('FETCH アクション', () => {
@@ -216,13 +229,12 @@ describe('Fish', function() {
     });
 
   });
-
-});
 ```
 
-fetchFishesアクションのテストはこのままだと書きにくいので、fetchを薄くラップして外から渡す。
+#### fetchFishesのテスト
 
-`webApi.get(url: string): Promise<Response>`のようなオブジェクトを受け取って使うように修正する。
+fetchFishesアクションのテストはこのままだと書きにくいので、fetch APIを薄くラップして外から渡すように修正する。
+`webApi.get(url: string): Promise<Response>`のようなオブジェクトを受け取って使う。
 
 ```javascript
 ...
@@ -310,12 +322,18 @@ function generateDummyWebApi(responseJson) {
     });
 ```
 
-項目の選択・選択解除をアクションにする
+### 項目の選択・選択解除アクション
+
+選択をSELECT、選択解除をDESELECTとしてそれぞれ定義する。
 
 ```javascript
 export const SELECT = 'fishes/select';
 export const DESELECT = 'fishes/deselect';
-...
+```
+
+選択アクションをselectFishとする。
+
+```javascript
 export function selectFish(fish) {
   return {
     type: SELECT,
@@ -324,7 +342,11 @@ export function selectFish(fish) {
     }
   };
 }
+```
 
+選択解除アクションをdeselectFishとする。
+
+```javascript
 export function deselectFish(fish) {
   return {
     type: DESELECT,
@@ -335,17 +357,14 @@ export function deselectFish(fish) {
 }
 ```
 
-ReducerをSELECT,DESELECTに対応させる
+SELECTとDESELECTのハンドリングをReducerに追記する。
+既存コードのチェックボックスのchangeイベントハンドラの処理からjQuery依存を排除しつつ移植する。
 
 ```javascript
-...
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   const { selectedItems } = state;
   switch (action.type) {
-  case FETCH:
-    return Object.assign({}, state, {
-      fishes: action.payload.fishes
-    });
+  ...
   case SELECT:
   {
     const { fish } = action.payload;
@@ -375,7 +394,7 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 }
 ```
 
-チェックボックスのイベントハンドラでselectFish, deselectFishアクションを使うように修正する。
+チェックボックスのchangeイベントハンドラではselectFish, deselectFishアクションを使うように修正する。
 
 ```javascript
 $('#fishes-list').on('change', '.select-row', function() {
@@ -389,7 +408,10 @@ $('#fishes-list').on('change', '.select-row', function() {
 });
 ```
 
-選択・選択解除を反映するためにStoreのsubscribe処理を修正する。
+選択・選択解除で更新された状態を反映するためにStoreのsubscribe処理を修正する。
+
+selectedItemsからIDで探してチェックボックスの状態に変換できるようにする。
+行が追加され続けないように、行を空にしてから追加するようにする。
 
 ```javascript
 store.subscribe(() => {
@@ -416,55 +438,9 @@ store.subscribe(() => {
 });
 ```
 
-単体テストを追加する
+### SELECTとDESELECTに関しての単体テストを追加する
 
-```javascript
-    describe('#selectFish', () => {
-
-      let type, payload;
-
-      beforeEach(() => {
-        const r = fish.selectFish({
-          'id': 1,
-          'name': 'まぐろ'
-        });
-        type = r.type;
-        payload = r.payload;
-      });
-
-      it('SELECTをtypeとして返す', () => {
-        assert(type === fish.SELECT);
-      });
-
-      it('選択された行データをpayloadとして返す', () => {
-        assertFishEqual(payload.fish, 1, 'まぐろ');
-      });
-
-    });
-
-    describe('#deselectFish', () => {
-
-      let type, payload;
-
-      beforeEach(() => {
-        const r = fish.deselectFish({
-          'id': 1,
-          'name': 'まぐろ'
-        });
-        type = r.type;
-        payload = r.payload;
-      });
-
-      it('DESELECTをtypeとして返す', () => {
-        assert(type === fish.DESELECT);
-      });
-
-      it('選択解除された行データをpayloadとして返す', () => {
-        assertFishEqual(payload.fish, 1, 'まぐろ');
-      });
-
-    });
-```
+#### ReducerのSELECTのテスト
 
 ```javascript
     describe('SELECT アクション', () => {
@@ -526,7 +502,11 @@ store.subscribe(() => {
       });
 
     });
+```
 
+#### ReducerのDESELECTのテスト
+
+```javascript
     describe('DESELECT アクション', () => {
 
       it('payloadの選択解除データを選択アイテムから削除して返す', () => {
@@ -560,20 +540,85 @@ store.subscribe(() => {
 
 ```
 
+#### selectFishのテスト
 
-全選択・全解除を実装する。
+```javascript
+    describe('#selectFish', () => {
 
+      let type, payload;
+
+      beforeEach(() => {
+        const r = fish.selectFish({
+          'id': 1,
+          'name': 'まぐろ'
+        });
+        type = r.type;
+        payload = r.payload;
+      });
+
+      it('SELECTをtypeとして返す', () => {
+        assert(type === fish.SELECT);
+      });
+
+      it('選択された行データをpayloadとして返す', () => {
+        assertFishEqual(payload.fish, 1, 'まぐろ');
+      });
+
+    });
+```
+
+#### deselectFishのテスト
+
+```javascript
+    describe('#deselectFish', () => {
+
+      let type, payload;
+
+      beforeEach(() => {
+        const r = fish.deselectFish({
+          'id': 1,
+          'name': 'まぐろ'
+        });
+        type = r.type;
+        payload = r.payload;
+      });
+
+      it('DESELECTをtypeとして返す', () => {
+        assert(type === fish.DESELECT);
+      });
+
+      it('選択解除された行データをpayloadとして返す', () => {
+        assertFishEqual(payload.fish, 1, 'まぐろ');
+      });
+
+    });
+```
+
+
+
+### 全選択・全選択解除アクション
+
+
+全選択をSELECT_ALL、全選択解除をDESELECT_ALLとしてそれぞれ定義する。
 
 ```javascript
 export const SELECT_ALL = 'fishes/select/all';
 export const DESELECT_ALL = 'fishes/deselect/all';
-...
+```
+
+全選択アクションをselectAllとする。
+
+```javascript
 export function selectAll() {
   return {
     type: SELECT_ALL
   };
 }
+```
 
+全選択解除アクションをdeselectAllとする。
+
+```javascript
 export function deselectAll() {
   return {
     type: DESELECT_ALL
@@ -581,7 +626,7 @@ export function deselectAll() {
 }
 ```
 
-Reducerを対応させる
+SELECT_ALLとDESELECT_ALLのハンドリングをReducerに追記する。
 
 ```javascript
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
@@ -602,7 +647,7 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 }
 ```
 
-アプリ側を対応させる
+全選択・全選択解除チェックボックスのchangeイベントハンドラではselectAll, deselectAllを使うようにする。
 
 ```javascript
 $('#all-check').change(function() {
@@ -615,28 +660,9 @@ $('#all-check').change(function() {
 });
 ```
 
-テストを追加する。
+### SELECT_ALLとDESELECT_ALLに関しての単体テストを追加する
 
-```javascript
-    describe('#selectAll', () => {
-
-      it('SELECT_ALLをtypeとして返す', () => {
-        const { type } = fish.selectAll();
-        assert(type === fish.SELECT_ALL);
-      });
-
-    });
-
-    describe('#deselectAll', () => {
-
-      it('DESELECT_ALLをtypeとして返す', () => {
-        const { type } = fish.deselectAll();
-        assert(type === fish.DESELECT_ALL);
-      });
-
-    });
-
-```
+#### ReducerのSELECT_ALLのテスト
 
 ```javascript
     describe('SELECT_ALL アクション', () => {
@@ -665,6 +691,11 @@ $('#all-check').change(function() {
       });
 
     });
+```
+
+#### ReducerのDESELECT_ALLのテスト
+
+```javascript
     describe('DESELECT_ALL アクション', () => {
 
       it('選択アイテムを全て解除して返す', () => {
@@ -692,8 +723,36 @@ $('#all-check').change(function() {
 
 ```
 
+#### selectAllのテスト
 
-けっていボタンのクリックイベントを修正する
+```javascript
+    describe('#selectAll', () => {
+
+      it('SELECT_ALLをtypeとして返す', () => {
+        const { type } = fish.selectAll();
+        assert(type === fish.SELECT_ALL);
+      });
+
+    });
+```
+
+#### deselectAllのテスト
+
+```javascript
+    describe('#deselectAll', () => {
+
+      it('DESELECT_ALLをtypeとして返す', () => {
+        const { type } = fish.deselectAll();
+        assert(type === fish.DESELECT_ALL);
+      });
+
+    });
+
+```
+
+### 決定処理の修正
+
+"けってい"ボタンのクリックイベントを修正する。selectedItems変数を使わずにStoreから状態を取得して処理する。
 
 ```javascript
 $('#select-button').click(function() {
@@ -707,7 +766,7 @@ $('#select-button').click(function() {
 });
 ```
 
-fishesとselectedItems変数が不要になったので削除し、subscribe周りを修正する
+fishesとselectedItems変数が不要になったので削除し、subscribe内でStoreから取得した状態のみ使うようにする。
 
 ```javascript
 import $ from 'jquery';
