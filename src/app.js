@@ -1,72 +1,63 @@
 import $ from 'jquery';
+import { createStore, applyMiddleware } from 'redux';
+import promiseMiddleware from 'redux-promise';
+import * as fish from './fish.js';
 
-$(function() {
+const webApi = {
+  get(url) {
+    return fetch(url);
+  }
+};
 
-  var fishes = [];
-  var selectedItems = [];
+const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
+store.subscribe(() => {
+  const { fishes, selectedItems }  = store.getState();
+  const selectedIds = selectedItems.reduce((set, f) => {
+    set.add(f.id);
+    return set;
+  }, new Set());
 
-  $.ajax('fishes.json').done(function(response) {
-    fishes = response.fishes;
-    var $fishesList = $('#fishes-list');
-
-    $.each(fishes, function(i, r) {
-      $fishesList.append(
-        $('<tr />')
-          .append($('<td />').append($('<input type="checkbox" class="select-row" />').data(r)))
-          .append($('<td />').text(r.name))
-      );
-    });
+  const $fishesList = $('#fishes-list');
+  $fishesList.empty();
+  $.each(fishes, function(i, r) {
+    const $check = $('<input type="checkbox" class="select-row" />').data(r);
+    $check.prop('checked', selectedIds.has(r.id));
+    $fishesList.append(
+      $('<tr />')
+        .append($('<td />').append($check))
+        .append($('<td />').text(r.name))
+    );
   });
+  $('#all-check').prop('checked', selectedItems.length === fishes.length);
+});
 
-  $('#all-check').change(function() {
-    var forceStatus = $(this).prop('checked');
-    $('.select-row').each(function(i, r) {
-      $(r).prop('checked', forceStatus);
-      $(r).change();
-    });
-  });
+store.dispatch(fish.fetchFishes(webApi));
 
-  $('#fishes-list').on('change', '.select-row', function() {
-    var $check = $(this);
-    var rowData = $check.data();
-    if (!$check.prop('checked')) {
-      var temp = [];
-      $.each(selectedItems, function(i, r) {
-        if (rowData.id !== r.id) {
-          temp.push(r);
-        }
-      });
-      selectedItems = temp;
-    } else {
-      var exist = false;
-      $.each(selectedItems, function(i, r) {
-        if (rowData.id === r.id) {
-          exist = true;
-          return false;
-        }
-      });
+$('#all-check').change(function() {
+  const forceStatus = $(this).prop('checked');
+  if (forceStatus) {
+    store.dispatch(fish.selectAll());
+  } else {
+    store.dispatch(fish.deselectAll());
+  }
+});
 
-      if (!exist) {
-        selectedItems.push(rowData);
-      }
-      selectedItems.sort(function(a, b) {
-        return a.id - b.id;
-      });
-    }
+$('#fishes-list').on('change', '.select-row', function() {
+  const $check = $(this);
+  const rowData = $check.data();
+  if (!$check.prop('checked')) {
+    store.dispatch(fish.deselectFish(rowData));
+  } else {
+    store.dispatch(fish.selectFish(rowData));
+  }
+});
 
-    $('#all-check').prop('checked', selectedItems.length === fishes.length);
-  });
-
-  $('#select-button').click(function() {
-    if (selectedItems.length > 0) {
-      var names = [];
-      $.each(selectedItems, function(i, r) {
-        names.push(r.name);
-      });
-      alert(names.join(','));
-    } else {
-      alert('せんたくしてください');
-    }
-  });
-
+$('#select-button').click(function() {
+  const { selectedItems } = store.getState();
+  if (selectedItems.length > 0) {
+    const names = selectedItems.map(r => r.name);
+    alert(names.join(','));
+  } else {
+    alert('せんたくしてください');
+  }
 });
