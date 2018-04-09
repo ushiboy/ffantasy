@@ -30,13 +30,13 @@ ESLintの設定でmochaを有効にする。
 $ npm install redux redux-promise
 ```
 
-### Reducerの作成とアプリケーションへの適用
+### リデューサの作成とアプリケーションへの適用
 
 既存コードから必要な状態を抽出する。
-今回は一覧(fishes)と選択アイテム(selectedItems)の2つ。これをReducerで扱うstateとする。
-ReducerやAction、Action Typeは`src/fish.js`として別ファイルで扱う。
+今回は一覧(fishes)と選択アイテム(selectedItems)の2つ。これをリデューサで扱うstateとする。
+リデューサやアクション、アクションタイプは`src/fish.js`として別ファイルで扱う。
 
-最初にReducerの大枠を作る。
+最初にリデューサの大枠を作る。
 
 ```javascript
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
@@ -47,12 +47,12 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 }
 ```
 
-アプリケーション本体(`src/app.js`)でReduxのStoreとして読み込む。
+アプリケーション本体(`src/app.js`)でReduxのストアとして読み込む。
 
 webpackでバンドルしているので変数はグローバル変数にならないし、
 jQueryのready内で扱う必要がなくなっているので`$(function() { ... })`をやめる。
 
-fishes Reducerを使ってStoreを作成する。ミドルウェアとしてredux-promiseを読ませておく。
+fishes リデューサを使ってストアを作成する。ミドルウェアとしてredux-promiseを読ませておく。
 
 ```javascript
 import $ from 'jquery';
@@ -99,7 +99,7 @@ export async function fetchFishes() {
 }
 ```
 
-FETCHアクションのハンドリングをReducerに追記する。
+FETCHアクションのハンドリングをリデューサに追記する。
 
 ```javascript
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
@@ -114,7 +114,7 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
 }
 ```
 
-これをアプリケーション本体で使う。アプリケーション起動時にStoreへdispatchする。
+これをアプリケーション本体で使う。アプリケーション起動時にストアへdispatchする。
 
 ```javascript
 ...
@@ -128,7 +128,7 @@ store.dispatch(fish.fetchFishes()); // <- 追加
 ...
 ```
 
-Storeのsubscribeで一覧データが取り出せるようになったので、一覧の描画処理を書き換える。
+ストアのsubscribeで一覧データが取り出せるようになったので、一覧の描画処理を書き換える。
 アプリケーション本体から次の部分を廃止する。
 
 ```javascript
@@ -146,7 +146,7 @@ $.ajax('fishes.json').done(function(response) {
 });
 ```
 
-`$.ajax`のコールバックでやっていたことをStoreのsubscribeに移動する。
+`$.ajax`のコールバックでやっていたことをストアのsubscribeに移動する。
 
 ```javascript
 store.subscribe(() => {
@@ -184,7 +184,7 @@ describe('Fish', function() {
   });
 
   describe('Reducer', () => {
-    // リデューサーのテストはここに書く
+    // リデューサのテストはここに書く
   });
 
 });
@@ -199,9 +199,9 @@ function assertFishEqual(actual, id, name) {
 }
 ```
 
-#### ReducerのFETCHのテスト
+#### リデューサのFETCHのテスト
 
-まずはReducerのテストとして、FETCHアクションのテストを追加する。
+まずはリデューサのテストとして、FETCHアクションのテストを追加する。
 
 ```javascript
   describe('Reducer', () => {
@@ -357,7 +357,7 @@ export function deselectFish(fish) {
 }
 ```
 
-SELECTとDESELECTのハンドリングをReducerに追記する。
+SELECTとDESELECTのハンドリングをリデューサに追記する。
 既存コードのチェックボックスのchangeイベントハンドラの処理からjQuery依存を排除しつつ移植する。
 
 ```javascript
@@ -408,7 +408,7 @@ $('#fishes-list').on('change', '.select-row', function() {
 });
 ```
 
-選択・選択解除で更新された状態を反映するためにStoreのsubscribe処理を修正する。
+選択・選択解除で更新された状態を反映するためにストアのsubscribe処理を修正する。
 
 selectedItemsからIDで探してチェックボックスの状態に変換できるようにする。
 行が追加され続けないように、行を空にしてから追加するようにする。
@@ -440,7 +440,7 @@ store.subscribe(() => {
 
 ### SELECTとDESELECTに関しての単体テストを追加する
 
-#### ReducerのSELECTのテスト
+#### リデューサのSELECTのテスト
 
 ```javascript
     describe('SELECT アクション', () => {
@@ -504,7 +504,7 @@ store.subscribe(() => {
     });
 ```
 
-#### ReducerのDESELECTのテスト
+#### リデューサのDESELECTのテスト
 
 ```javascript
     describe('DESELECT アクション', () => {
@@ -626,7 +626,7 @@ export function deselectAll() {
 }
 ```
 
-SELECT_ALLとDESELECT_ALLのハンドリングをReducerに追記する。
+SELECT_ALLとDESELECT_ALLのハンドリングをリデューサに追記する。
 
 ```javascript
 export function fishes(state = { fishes: [], selectedItems: [] }, action) {
@@ -662,7 +662,7 @@ $('#all-check').change(function() {
 
 ### SELECT_ALLとDESELECT_ALLに関しての単体テストを追加する
 
-#### ReducerのSELECT_ALLのテスト
+#### リデューサのSELECT_ALLのテスト
 
 ```javascript
     describe('SELECT_ALL アクション', () => {
@@ -693,7 +693,7 @@ $('#all-check').change(function() {
     });
 ```
 
-#### ReducerのDESELECT_ALLのテスト
+#### リデューサのDESELECT_ALLのテスト
 
 ```javascript
     describe('DESELECT_ALL アクション', () => {
@@ -752,7 +752,7 @@ $('#all-check').change(function() {
 
 ### 決定処理の修正
 
-"けってい"ボタンのクリックイベントを修正する。selectedItems変数を使わずにStoreから状態を取得して処理する。
+"けってい"ボタンのクリックイベントを修正する。selectedItems変数を使わずにストアから状態を取得して処理する。
 
 ```javascript
 $('#select-button').click(function() {
@@ -766,7 +766,7 @@ $('#select-button').click(function() {
 });
 ```
 
-fishesとselectedItems変数が不要になったので削除し、subscribe内でStoreから取得した状態のみ使うようにする。
+fishesとselectedItems変数が不要になったので削除し、subscribe内でストアから取得した状態のみ使うようにする。
 
 ```javascript
 import $ from 'jquery';
@@ -802,3 +802,60 @@ store.subscribe(() => {
   $('#all-check').prop('checked', selectedItems.length === fishes.length);
 });
 ```
+
+### 動作確認
+
+単体テストは最終的に次のようになる。
+
+```
+$ npm run -s mocha test/unit/fish-test.js
+
+  Fish
+    Action
+      #fetchFishes
+        ✓ fishes.jsonを取得する
+        ✓ FETCHをtypeとして返す
+        ✓ 一覧データをpayloadとして返す
+      #selectFish
+        ✓ SELECTをtypeとして返す
+        ✓ 選択された行データをpayloadとして返す
+      #deselectFish
+        ✓ DESELECTをtypeとして返す
+        ✓ 選択解除された行データをpayloadとして返す
+      #selectAll
+        ✓ SELECT_ALLをtypeとして返す
+      #deselectAll
+        ✓ DESELECT_ALLをtypeとして返す
+    Reducer
+      FETCH アクション
+        ✓ payloadのfishesをstateに取り込んで返す
+      SELECT アクション
+        ✓ payloadの選択データを選択アイテムに追加して返す
+        選択データと同じ選択アイテムがすでにある場合
+          ✓ 重複をまとめたうえで選択アイテムに追加して返す
+      DESELECT アクション
+        ✓ payloadの選択解除データを選択アイテムから削除して返す
+      SELECT_ALL アクション
+        ✓ 一覧データを全て選択アイテムにして返す
+      DESELECT_ALL アクション
+        ✓ 選択アイテムを全て解除して返す
+
+
+  15 passing (139ms)
+```
+
+ビルドして開発用WEBサーバを起動する。
+
+```
+$ npm run build
+$ npm run serve
+```
+
+E2Eテストを動かして、壊れていないことを確認する。
+```
+$ npm run -s mocha test/e2e/spec/FishList-test.js
+```
+
+## まとめ
+
+Reduxを導入してプレゼンテーションとドメインを分けて、単体テストを追加した。
