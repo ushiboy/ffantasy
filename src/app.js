@@ -1,6 +1,11 @@
+import 'babel-polyfill';
 import $ from 'jquery';
 import { createStore, applyMiddleware } from 'redux';
 import promiseMiddleware from 'redux-promise';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Provider, connect } from 'react-redux';
+import { FishList } from './component.js';
 import * as fish from './fish.js';
 
 const webApi = {
@@ -10,28 +15,41 @@ const webApi = {
 };
 
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
-store.subscribe(() => {
-  const { fishes, selectedItems }  = store.getState();
-  const selectedIds = selectedItems.reduce((set, f) => {
-    set.add(f.id);
-    return set;
-  }, new Set());
-
-  const $fishesList = $('#fishes-list');
-  $fishesList.empty();
-  $.each(fishes, function(i, r) {
-    const $check = $('<input type="checkbox" class="select-row" />').data(r);
-    $check.prop('checked', selectedIds.has(r.id));
-    $fishesList.append(
-      $('<tr />')
-        .append($('<td />').append($check))
-        .append($('<td />').text(r.name))
-    );
-  });
-  $('#all-check').prop('checked', selectedItems.length === fishes.length);
-});
+//store.subscribe(() => {
+//  const { fishes, selectedItems }  = store.getState();
+//  const selectedIds = selectedItems.reduce((set, f) => {
+//    set.add(f.id);
+//    return set;
+//  }, new Set());
+//
+//  const $fishesList = $('#fishes-list');
+//  $fishesList.empty();
+//  $.each(fishes, function(i, r) {
+//    const $check = $('<input type="checkbox" class="select-row" />').data(r);
+//    $check.prop('checked', selectedIds.has(r.id));
+//    $fishesList.append(
+//      $('<tr />')
+//        .append($('<td />').append($check))
+//        .append($('<td />').text(r.name))
+//    );
+//  });
+//  $('#all-check').prop('checked', selectedItems.length === fishes.length);
+//});
 
 store.dispatch(fish.fetchFishes(webApi));
+
+const ConnectedFishList = connect(({ fishes, selectedItems }) => ({
+  fishes,
+  selectedItems
+}))(FishList);
+
+ReactDOM.render(
+  <Provider store={store}>
+    <ConnectedFishList />
+  </Provider>,
+  document.querySelector('.app')
+);
+
 
 $('#all-check').change(function() {
   const forceStatus = $(this).prop('checked');
