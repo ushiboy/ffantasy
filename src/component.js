@@ -33,8 +33,15 @@ export class FishList extends React.Component {
     );
   }
 
+  componentDidMount() {
+    this.props.actions.fetchFishes();
+  }
+
 }
 FishList.propTypes = {
+  actions: PropTypes.shape({
+    fetchFishes: PropTypes.func
+  }),
   fishes: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number,
     name: PropTypes.string

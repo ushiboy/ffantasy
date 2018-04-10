@@ -1,6 +1,6 @@
 import 'babel-polyfill';
 import $ from 'jquery';
-import { createStore, applyMiddleware } from 'redux';
+import { createStore, applyMiddleware, bindActionCreators } from 'redux';
 import promiseMiddleware from 'redux-promise';
 import React from 'react';
 import ReactDOM from 'react-dom';
@@ -15,32 +15,14 @@ const webApi = {
 };
 
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
-//store.subscribe(() => {
-//  const { fishes, selectedItems }  = store.getState();
-//  const selectedIds = selectedItems.reduce((set, f) => {
-//    set.add(f.id);
-//    return set;
-//  }, new Set());
-//
-//  const $fishesList = $('#fishes-list');
-//  $fishesList.empty();
-//  $.each(fishes, function(i, r) {
-//    const $check = $('<input type="checkbox" class="select-row" />').data(r);
-//    $check.prop('checked', selectedIds.has(r.id));
-//    $fishesList.append(
-//      $('<tr />')
-//        .append($('<td />').append($check))
-//        .append($('<td />').text(r.name))
-//    );
-//  });
-//  $('#all-check').prop('checked', selectedItems.length === fishes.length);
-//});
-
-store.dispatch(fish.fetchFishes(webApi));
 
 const ConnectedFishList = connect(({ fishes, selectedItems }) => ({
   fishes,
   selectedItems
+}), (dispatch) => ({
+  actions: {
+    fetchFishes: bindActionCreators(() => fish.fetchFishes(webApi), dispatch)
+  }
 }))(FishList);
 
 ReactDOM.render(
