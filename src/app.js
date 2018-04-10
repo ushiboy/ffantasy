@@ -20,9 +20,13 @@ const ConnectedFishList = connect(({ fishes, selectedItems }) => ({
   fishes,
   selectedItems
 }), (dispatch) => ({
-  actions: {
+  actions: Object.assign({
     fetchFishes: bindActionCreators(() => fish.fetchFishes(webApi), dispatch)
-  }
+  },
+  bindActionCreators({
+    selectFish: fish.selectFish,
+    deselectFish: fish.deselectFish
+  }, dispatch))
 }))(FishList);
 
 ReactDOM.render(

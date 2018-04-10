@@ -11,7 +11,7 @@ export class FishList extends React.Component {
     }, new Set());
 
     const rows = fishes.map(r => {
-      return <FishListRow key={r.id} fish={r} selected={selectedIds.has(r.id)} />;
+      return <FishListRow key={r.id} fish={r} selected={selectedIds.has(r.id)} onChange={this.handleChangeRow.bind(this)} />;
     });
 
     return (
@@ -37,10 +37,20 @@ export class FishList extends React.Component {
     this.props.actions.fetchFishes();
   }
 
+  handleChangeRow(e, row) {
+    if (e.target.checked) {
+      this.props.actions.selectFish(row);
+    } else {
+      this.props.actions.deselectFish(row);
+    }
+  }
+
 }
 FishList.propTypes = {
   actions: PropTypes.shape({
-    fetchFishes: PropTypes.func
+    fetchFishes: PropTypes.func,
+    selectFish: PropTypes.func,
+    deselectFish: PropTypes.func
   }),
   fishes: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number,
