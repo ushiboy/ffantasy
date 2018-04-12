@@ -46,16 +46,6 @@ $('#all-check').change(function() {
   }
 });
 
-$('#fishes-list').on('change', '.select-row', function() {
-  const $check = $(this);
-  const rowData = $check.data();
-  if (!$check.prop('checked')) {
-    store.dispatch(fish.deselectFish(rowData));
-  } else {
-    store.dispatch(fish.selectFish(rowData));
-  }
-});
-
 $('#select-button').click(function() {
   const { selectedItems } = store.getState();
   if (selectedItems.length > 0) {
