@@ -14,13 +14,14 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   case SELECT:
   {
     const { fish } = action.payload;
-    if (!selectedItems.find(r => {
+    const s = selectedItems.concat();
+    if (!s.find(r => {
       return r.id === fish.id;
     })) {
-      selectedItems.push(fish);
+      s.push(fish);
     }
     return Object.assign({}, state, {
-      selectedItems: selectedItems.sort((a, b) => {
+      selectedItems: s.sort((a, b) => {
         return a.id - b.id;
       })
     });
