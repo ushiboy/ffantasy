@@ -29,7 +29,7 @@ export class FishList extends React.Component {
             {rows}
           </tbody>
         </table>
-        <button type="button" id="select-button">けってい</button>
+        <button type="button" id="select-button" onClick={this.handleClick.bind(this)}>けってい</button>
       </div>
     );
   }
@@ -52,6 +52,16 @@ export class FishList extends React.Component {
       this.props.actions.selectAll();
     } else {
       this.props.actions.deselectAll();
+    }
+  }
+
+  handleClick() {
+    const { selectedItems } = this.props;
+    if (selectedItems.length > 0) {
+      const names = selectedItems.map(r => r.name);
+      alert(names.join(','));
+    } else {
+      alert('せんたくしてください');
     }
   }
 

@@ -1,5 +1,4 @@
 import 'babel-polyfill';
-import $ from 'jquery';
 import { createStore, applyMiddleware, bindActionCreators } from 'redux';
 import promiseMiddleware from 'redux-promise';
 import React from 'react';
@@ -37,13 +36,3 @@ ReactDOM.render(
   </Provider>,
   document.querySelector('.app')
 );
-
-$('#select-button').click(function() {
-  const { selectedItems } = store.getState();
-  if (selectedItems.length > 0) {
-    const names = selectedItems.map(r => r.name);
-    alert(names.join(','));
-  } else {
-    alert('せんたくしてください');
-  }
-});
