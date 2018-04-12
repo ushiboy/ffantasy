@@ -208,22 +208,32 @@ function assertFishEqual(actual, id, name) {
 
     describe('FETCH アクション', () => {
 
-      it('payloadのfishesをstateに取り込んで返す', () => {
-        const initState = {};
-        const action = {
-          type: fish.FETCH,
-          payload: {
-            fishes: [
-              {
-                'id': 1,
-                'name': 'まぐろ'
-              }
-            ]
-          }
+      let initState;
+      let fishes;
+      const action = {
+        type: fish.FETCH,
+        payload: {
+          fishes: [
+            { 'id': 1, 'name': 'まぐろ' }
+          ]
+        }
+      };
+
+      beforeEach(() => {
+        initState = {
+          fishes: [],
+          selectedItems: []
         };
-        const { fishes } = fish.fishes(initState, action);
+        fishes = fish.fishes(initState, action).fishes;
+      });
+
+      it('payloadのfishesをstateに取り込んで返す', () => {
         assert(fishes.length === 1);
         assertFishEqual(fishes[0], 1, 'まぐろ');
+      });
+
+      it('前の状態の一覧データは変更されない', () => {
+        assert(initState.fishes.length === 0);
       });
 
     });
@@ -368,13 +378,14 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   case SELECT:
   {
     const { fish } = action.payload;
-    if (!selectedItems.find(r => {
+    const s = selectedItems.concat();
+    if (!s.find(r => {
       return r.id === fish.id;
     })) {
-      selectedItems.push(fish);
+      s.push(fish);
     }
     return Object.assign({}, state, {
-      selectedItems: selectedItems.sort((a, b) => {
+      selectedItems: s.sort((a, b) => {
         return a.id - b.id;
       })
     });
@@ -445,56 +456,47 @@ store.subscribe(() => {
 ```javascript
     describe('SELECT アクション', () => {
 
-      it('payloadの選択データを選択アイテムに追加して返す', () => {
-        const initState = {
+      let initState;
+      const action = {
+        type: fish.SELECT,
+        payload: {
+          fish: { 'id': 3, 'name': 'かつお' }
+        }
+      };
+
+      beforeEach(() => {
+        initState = {
+          fishes: [],
           selectedItems: [
-            {
-              'id': 2,
-              'name': 'はまち'
-            }
+            { 'id': 1, 'name': 'まぐろ' },
+            { 'id': 2, 'name': 'はまち' }
           ]
         };
-        const action = {
-          type: fish.SELECT,
-          payload: {
-            fish: {
-              'id': 1,
-              'name': 'まぐろ'
-            }
-          }
-        };
+      });
+
+      it('payloadの選択データを選択アイテムに追加して返す', () => {
         const { selectedItems } = fish.fishes(initState, action);
-        assert(selectedItems.length === 2);
+        assert(selectedItems.length === 3);
         assertFishEqual(selectedItems[0], 1, 'まぐろ');
         assertFishEqual(selectedItems[1], 2, 'はまち');
+        assertFishEqual(selectedItems[2], 3, 'かつお');
+      });
+
+      it('前の状態の選択アイテムは変更されない', () => {
+        fish.fishes(initState, action);
+        assert(initState.selectedItems.length === 2);
       });
 
       context('選択データと同じ選択アイテムがすでにある場合', () => {
 
-        const initState = {
-          selectedItems: [
-            {
-              'id': 1,
-              'name': 'まぐろ'
-            },
-            {
-              'id': 2,
-              'name': 'はまち'
-            }
-          ]
-        };
-
         it('重複をまとめたうえで選択アイテムに追加して返す', () => {
-          const action = {
+          const alreadySelectedPayloadAction = {
             type: fish.SELECT,
             payload: {
-              fish: {
-                'id': 1,
-                'name': 'まぐろ'
-              }
+              fish: { 'id': 1, 'name': 'まぐろ' }
             }
           };
-          const { selectedItems } = fish.fishes(initState, action);
+          const { selectedItems } = fish.fishes(initState, alreadySelectedPayloadAction);
           assert(selectedItems.length === 2);
           assertFishEqual(selectedItems[0], 1, 'まぐろ');
           assertFishEqual(selectedItems[1], 2, 'はまち');
@@ -509,31 +511,33 @@ store.subscribe(() => {
 ```javascript
     describe('DESELECT アクション', () => {
 
-      it('payloadの選択解除データを選択アイテムから削除して返す', () => {
-        const initState = {
+      let initState;
+      let selectedItems;
+      const action = {
+        type: fish.DESELECT,
+        payload: {
+          fish: { 'id': 1, 'name': 'まぐろ' }
+        }
+      };
+
+      beforeEach(() => {
+        initState = {
+          fishes: [],
           selectedItems: [
-            {
-              'id': 1,
-              'name': 'まぐろ'
-            },
-            {
-              'id': 2,
-              'name': 'はまち'
-            }
+            { 'id': 1, 'name': 'まぐろ' },
+            { 'id': 2, 'name': 'はまち' }
           ]
         };
-        const action = {
-          type: fish.DESELECT,
-          payload: {
-            fish: {
-              'id': 1,
-              'name': 'まぐろ'
-            }
-          }
-        };
-        const { selectedItems } = fish.fishes(initState, action);
+        selectedItems = fish.fishes(initState, action).selectedItems;
+      });
+
+      it('payloadの選択解除データを選択アイテムから削除して返す', () => {
         assert(selectedItems.length === 1);
         assertFishEqual(selectedItems[0], 2, 'はまち');
+      });
+
+      it('前の状態の選択アイテムは変更されない', () => {
+        assert(initState.selectedItems.length === 2);
       });
 
     });
@@ -667,27 +671,29 @@ $('#all-check').change(function() {
 ```javascript
     describe('SELECT_ALL アクション', () => {
 
-      it('一覧データを全て選択アイテムにして返す', () => {
-        const initState = {
+      let initState;
+      let selectedItems;
+      const action = { type: fish.SELECT_ALL };
+
+      beforeEach(() => {
+        initState = {
           fishes: [
-            {
-              'id': 1,
-              'name': 'まぐろ'
-            },
-            {
-              'id': 2,
-              'name': 'はまち'
-            }
+            { 'id': 1, 'name': 'まぐろ' },
+            { 'id': 2, 'name': 'はまち' }
           ],
           selectedItems: []
         };
-        const action = {
-          type: fish.SELECT_ALL
-        };
-        const { selectedItems } = fish.fishes(initState, action);
+        selectedItems = fish.fishes(initState, action).selectedItems;
+      });
+
+      it('一覧データを全て選択アイテムにして返す', () => {
         assert(selectedItems.length === 2);
         assertFishEqual(selectedItems[0], 1, 'まぐろ');
         assertFishEqual(selectedItems[1], 2, 'はまち');
+      });
+
+      it('前の状態の選択アイテムは変更されない', () => {
+        assert(initState.selectedItems.length === 0);
       });
 
     });
@@ -698,29 +704,30 @@ $('#all-check').change(function() {
 ```javascript
     describe('DESELECT_ALL アクション', () => {
 
-      it('選択アイテムを全て解除して返す', () => {
-        const initState = {
+      let initState;
+      let selectedItems;
+      const action = { type: fish.DESELECT_ALL };
+
+      beforeEach(() => {
+        initState = {
           fishes: [],
           selectedItems: [
-            {
-              'id': 1,
-              'name': 'まぐろ'
-            },
-            {
-              'id': 2,
-              'name': 'はまち'
-            }
+            { 'id': 1, 'name': 'まぐろ' },
+            { 'id': 2, 'name': 'はまち' }
           ]
         };
-        const action = {
-          type: fish.DESELECT_ALL
-        };
-        const { selectedItems } = fish.fishes(initState, action);
+        selectedItems = fish.fishes(initState, action).selectedItems;
+      });
+
+      it('選択アイテムを全て解除して返す', () => {
         assert(selectedItems.length === 0);
       });
 
-    });
+      it('前の状態の選択アイテムは変更されない', () => {
+        assert(initState.selectedItems.length === 2);
+      });
 
+    });
 ```
 
 #### selectAllのテスト
@@ -829,19 +836,24 @@ $ npm run -s mocha test/unit/fish-test.js
     Reducer
       FETCH アクション
         ✓ payloadのfishesをstateに取り込んで返す
+        ✓ 前の状態の一覧データは変更されない
       SELECT アクション
         ✓ payloadの選択データを選択アイテムに追加して返す
+        ✓ 前の状態の選択アイテムは変更されない
         選択データと同じ選択アイテムがすでにある場合
           ✓ 重複をまとめたうえで選択アイテムに追加して返す
       DESELECT アクション
         ✓ payloadの選択解除データを選択アイテムから削除して返す
+        ✓ 前の状態の選択アイテムは変更されない
       SELECT_ALL アクション
         ✓ 一覧データを全て選択アイテムにして返す
+        ✓ 前の状態の選択アイテムは変更されない
       DESELECT_ALL アクション
         ✓ 選択アイテムを全て解除して返す
+        ✓ 前の状態の選択アイテムは変更されない
 
 
-  15 passing (139ms)
+  20 passing (94ms)
 ```
 
 ビルドして開発用WEBサーバを起動する。
