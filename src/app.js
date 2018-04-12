@@ -25,7 +25,9 @@ const ConnectedFishList = connect(({ fishes, selectedItems }) => ({
   },
   bindActionCreators({
     selectFish: fish.selectFish,
-    deselectFish: fish.deselectFish
+    deselectFish: fish.deselectFish,
+    selectAll: fish.selectAll,
+    deselectAll: fish.deselectAll
   }, dispatch))
 }))(FishList);
 
@@ -35,16 +37,6 @@ ReactDOM.render(
   </Provider>,
   document.querySelector('.app')
 );
-
-
-$('#all-check').change(function() {
-  const forceStatus = $(this).prop('checked');
-  if (forceStatus) {
-    store.dispatch(fish.selectAll());
-  } else {
-    store.dispatch(fish.deselectAll());
-  }
-});
 
 $('#select-button').click(function() {
   const { selectedItems } = store.getState();

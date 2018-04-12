@@ -9,6 +9,7 @@ export class FishList extends React.Component {
       set.add(f.id);
       return set;
     }, new Set());
+    const allSelected = selectedItems.length === fishes.length;
 
     const rows = fishes.map(r => {
       return <FishListRow key={r.id} fish={r} selected={selectedIds.has(r.id)} onChange={this.handleChangeRow.bind(this)} />;
@@ -20,7 +21,7 @@ export class FishList extends React.Component {
         <table>
           <thead>
             <tr>
-              <th><input type="checkbox" id="all-check" /></th>
+              <th><input type="checkbox" id="all-check" checked={allSelected} onChange={this.handleChange.bind(this)}  /></th>
               <th>なまえ</th>
             </tr>
           </thead>
@@ -45,12 +46,23 @@ export class FishList extends React.Component {
     }
   }
 
+  handleChange(e) {
+    const forceStatus = e.target.checked;
+    if (forceStatus) {
+      this.props.actions.selectAll();
+    } else {
+      this.props.actions.deselectAll();
+    }
+  }
+
 }
 FishList.propTypes = {
   actions: PropTypes.shape({
     fetchFishes: PropTypes.func,
     selectFish: PropTypes.func,
-    deselectFish: PropTypes.func
+    deselectFish: PropTypes.func,
+    selectAll: PropTypes.func,
+    deselectAll: PropTypes.func
   }),
   fishes: PropTypes.arrayOf(PropTypes.shape({
     id: PropTypes.number,
