@@ -13,22 +13,31 @@ const webApi = {
   }
 };
 
-const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
+const { selectFish, deselectFish, selectAll, deselectAll, fetchFishes } = fish;
 
-const ConnectedFishList = connect(({ fishes, selectedItems }) => ({
-  fishes,
-  selectedItems
-}), (dispatch) => ({
-  actions: Object.assign({
-    fetchFishes: bindActionCreators(() => fish.fetchFishes(webApi), dispatch)
-  },
-  bindActionCreators({
-    selectFish: fish.selectFish,
-    deselectFish: fish.deselectFish,
-    selectAll: fish.selectAll,
-    deselectAll: fish.deselectAll
-  }, dispatch))
-}))(FishList);
+function mapStateToProps(state) {
+  const { fishes, selectedItems } = state;
+  return {
+    fishes,
+    selectedItems
+  };
+}
+
+function mapDispatchToProps(dispatch) {
+  return {
+    actions: bindActionCreators({
+      fetchFishes: () => fetchFishes(webApi),
+      selectFish,
+      deselectFish,
+      selectAll,
+      deselectAll
+    }, dispatch)
+  };
+}
+
+const ConnectedFishList = connect(mapStateToProps, mapDispatchToProps)(FishList);
+
+const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 
 ReactDOM.render(
   <Provider store={store}>
