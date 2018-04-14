@@ -9,7 +9,16 @@ function configureWebpack(mode) {
     mode,
     entry: [
       './src/app.js'
-    ]
+    ],
+    module: {
+      rules: [
+        {
+          test: /\.js$/,
+          exclude: /node_modules/,
+          loader: 'babel-loader'
+        }
+      ]
+    }
   };
 
   if (mode === 'production') {
