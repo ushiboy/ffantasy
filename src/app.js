@@ -1,3 +1,4 @@
+/* @flow */
 import 'babel-polyfill';
 import { createStore, applyMiddleware, bindActionCreators } from 'redux';
 import promiseMiddleware from 'redux-promise';
@@ -39,9 +40,12 @@ const ConnectedFishList = connect(mapStateToProps, mapDispatchToProps)(FishList)
 
 const store = createStore(fish.fishes, applyMiddleware(promiseMiddleware));
 
-ReactDOM.render(
-  <Provider store={store}>
-    <ConnectedFishList />
-  </Provider>,
-  document.querySelector('.app')
-);
+const el = document.querySelector('.app');
+
+if (el) {
+  ReactDOM.render(
+    <Provider store={store}>
+      <ConnectedFishList />
+    </Provider>,
+    el);
+}
