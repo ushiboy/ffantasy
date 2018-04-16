@@ -1,7 +1,22 @@
+/* @flow */
 import React from 'react';
-import PropTypes from 'prop-types';
+import type { Fish, Action } from './fish.js';
 
-export class FishList extends React.Component {
+type ActionCreator = (action: Action | Promise<Action>) => void;
+
+type FishListProps = {
+  fishes: Fish[],
+  selectedItems: Fish[],
+  actions: {
+    fetchFishes: ActionCreator,
+    selectFish: ActionCreator,
+    deselectFish: ActionCreator,
+    selectAll: ActionCreator,
+    deselectAll: ActionCreator
+  }
+}
+
+export class FishList extends React.Component<FishListProps> {
 
   render() {
     const { fishes, selectedItems } = this.props;
@@ -38,7 +53,7 @@ export class FishList extends React.Component {
     this.props.actions.fetchFishes();
   }
 
-  handleChangeRow(e, row) {
+  handleChangeRow(e: SyntheticInputEvent<HTMLInputElement>, row: Fish) {
     if (e.target.checked) {
       this.props.actions.selectFish(row);
     } else {
@@ -46,7 +61,7 @@ export class FishList extends React.Component {
     }
   }
 
-  handleChange(e) {
+  handleChange(e: SyntheticInputEvent<HTMLInputElement>) {
     const forceStatus = e.target.checked;
     if (forceStatus) {
       this.props.actions.selectAll();
@@ -66,25 +81,14 @@ export class FishList extends React.Component {
   }
 
 }
-FishList.propTypes = {
-  actions: PropTypes.shape({
-    fetchFishes: PropTypes.func,
-    selectFish: PropTypes.func,
-    deselectFish: PropTypes.func,
-    selectAll: PropTypes.func,
-    deselectAll: PropTypes.func
-  }),
-  fishes: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.number,
-    name: PropTypes.string
-  })),
-  selectedItems: PropTypes.arrayOf(PropTypes.shape({
-    id: PropTypes.number,
-    name: PropTypes.string
-  }))
-};
 
-function FishListRow(props) {
+type FishListRowProps = {
+  fish: Fish,
+  selected: boolean,
+  onChange: (e: SyntheticInputEvent<HTMLInputElement>, row: Fish) => void
+}
+
+function FishListRow(props: FishListRowProps) {
   const { name } = props.fish;
   const { selected, onChange } = props;
   return (
@@ -98,10 +102,3 @@ function FishListRow(props) {
     </tr>
   );
 }
-FishListRow.propTypes = {
-  fish: PropTypes.shape({
-    name: PropTypes.string.isRequired
-  }),
-  selected: PropTypes.bool,
-  onChange: PropTypes.func
-};
