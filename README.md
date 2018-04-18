@@ -14,3 +14,4 @@ jQueryベタ書きの[アプリケーション](https://ushiboy.github.io/ffanta
 * [Step3 ライブラリの依存関係管理とビルド環境を導入する](./work_logs/step3.md)
 * [Step4 ドメインとプレゼンテーションを分離して、ドメインの単体テストを導入する](./work_logs/step4.md)
 * [Step5 プレゼンテーションをコンポーネント化する](./work_logs/step5.md)
+* [Step6 flowを導入して型を定義する](./work_logs/step6.md)
