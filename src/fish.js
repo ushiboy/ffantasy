@@ -1,10 +1,35 @@
+/* @flow */
 export const FETCH = 'fishes/fetch';
 export const SELECT = 'fishes/select';
 export const DESELECT = 'fishes/deselect';
 export const SELECT_ALL = 'fishes/select/all';
 export const DESELECT_ALL = 'fishes/deselect/all';
 
-export function fishes(state = { fishes: [], selectedItems: [] }, action) {
+type __ReturnType<B, F: (...any) => B | Promise<B>> = B; // eslint-disable-line no-unused-vars
+type $ReturnType<F> = __ReturnType<*, F>
+
+export type Action =
+  | $ReturnType<typeof fetchFishes>
+  | $ReturnType<typeof selectFish>
+  | $ReturnType<typeof deselectFish>
+  | $ReturnType<typeof selectAll>
+  | $ReturnType<typeof deselectAll>
+
+export type Fish = {
+  id: number,
+  name: string
+};
+
+export type State = {
+  fishes: Fish[],
+  selectedItems: Fish[]
+};
+
+export type WebAPI = {
+  get: (url: string) => Promise<Response>
+};
+
+export function fishes(state: State = { fishes: [], selectedItems: [] }, action: Action) {
   const { selectedItems } = state;
   switch (action.type) {
   case FETCH:
@@ -48,7 +73,7 @@ export function fishes(state = { fishes: [], selectedItems: [] }, action) {
   }
 }
 
-export async function fetchFishes(webApi) {
+export async function fetchFishes(webApi: WebAPI) {
   const res = await webApi.get('fishes.json');
   const json = await res.json();
   const { fishes } = json;
@@ -60,7 +85,7 @@ export async function fetchFishes(webApi) {
   };
 }
 
-export function selectFish(fish) {
+export function selectFish(fish: Fish) {
   return {
     type: SELECT,
     payload: {
@@ -69,7 +94,7 @@ export function selectFish(fish) {
   };
 }
 
-export function deselectFish(fish) {
+export function deselectFish(fish: Fish) {
   return {
     type: DESELECT,
     payload: {
